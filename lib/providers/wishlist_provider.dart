@@ -21,7 +21,8 @@ final wishlistNamesProvider = StreamProvider<List<String>>((ref) {
     return Stream.value([]);
   }
 
-  return firestoreService.getWishlistStream(); // ✅ الآن يعيد Stream<List<String>>
+  return firestoreService
+      .getWishlistStream(); // ✅ الآن يعيد Stream<List<String>>
 });
 
 // ✅ Provider لقائمة الـ Wishlist كاملة (جلب المنتجات بالأسماء)
@@ -49,7 +50,7 @@ final wishlistItemsProvider = FutureProvider<List<WishlistItem>>((ref) async {
   return items;
 });
 
-// ✅ Provider للتحكم في الـ Wishlist
+
 final wishlistControllerProvider = Provider((ref) {
   return WishlistController(ref);
 });
@@ -66,12 +67,8 @@ class WishlistController {
     if (currentUser == null) {
       throw Exception('Please login to add to wishlist');
     }
-
     final firestoreService = ref.read(firestoreServiceProvider);
-    // ✅ إضافة المنتج بالاسم (String)
     await firestoreService.addToWishlist(product.title!);
-
-    // تحديث الـ Provider
     ref.invalidate(wishlistNamesProvider);
     ref.invalidate(wishlistItemsProvider);
   }
@@ -88,11 +85,11 @@ class WishlistController {
   Future<void> clearWishlist() async {
     final firestoreService = ref.read(firestoreServiceProvider);
     await firestoreService.clearWishlist();
-
     // تحديث الـ Provider
     ref.invalidate(wishlistNamesProvider);
     ref.invalidate(wishlistItemsProvider);
   }
+
   Future<bool> isInWishlist(String productName) async {
     final firestoreService = ref.read(firestoreServiceProvider);
     return await firestoreService.isInWishlist(productName);
