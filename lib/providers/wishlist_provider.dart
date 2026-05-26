@@ -50,7 +50,6 @@ final wishlistItemsProvider = FutureProvider<List<WishlistItem>>((ref) async {
   return items;
 });
 
-
 final wishlistControllerProvider = Provider((ref) {
   return WishlistController(ref);
 });
