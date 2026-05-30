@@ -237,7 +237,7 @@ class _SaleProductsScreenState extends ConsumerState<SaleProductsScreen> {
                             Text(
                               'Get up to 40% off on selected items',
                               style: AppTypography.bodyMedium(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -379,7 +379,7 @@ class _SaleProductsScreenState extends ConsumerState<SaleProductsScreen> {
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
