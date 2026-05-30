@@ -2,14 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:hive_flutter/hive_flutter.dart'; // ✅ أضف هذا الاستيراد
-import 'models/wishlist_item.dart'; // ✅ أضف هذا الاستيراد
+import 'package:hive_flutter/hive_flutter.dart';
+import 'models/wishlist_item.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/api_service.dart';
 import 'core/services/secure_storage_service.dart';
 import 'features/home/screens/empty_wishlist_screen.dart';
 import 'features/home/screens/sale_products_screen.dart';
 import 'providers/wishlist_provider.dart';
+import 'providers/auth_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
 import 'features/auth/screens/onboarding_screen.dart';
 import 'features/auth/screens/welcome_screen.dart';
@@ -48,13 +49,9 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ تهيئة Hive (أضف هذا الجزء)
+  // ✅ تهيئة Hive
   await Hive.initFlutter();
-
-  // ✅ تسجيل الـ Adapter لـ WishlistItem
   Hive.registerAdapter(WishlistItemAdapter());
-
-  // ✅ فتح الـ Box (اختياري)
   await Hive.openBox('wishlist_box');
 
   // ✅ تهيئة Firebase
@@ -78,18 +75,61 @@ void main() async {
   );
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerStatefulWidget {
   const MyApp({super.key});
 
   @override
+  ConsumerState<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  @override
   Widget build(BuildContext context) {
+    // ✅ الاستماع إلى حالة تسجيل الدخول
+    final authState = ref.watch(authStateProvider);
+
     return MaterialApp(
       title: 'ShopHub - Ecommerce App',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      home: const SplashScreen(), // ✅ نبدأ بـ HomeScreen
+      // ✅ تحديد الشاشة الابتدائية بناءً على حالة تسجيل الدخول
+      home: authState.when(
+        data: (user) {
+          if (user != null) {
+            // المستخدم مسجل دخوله → اذهب إلى HomeScreen
+            return const HomeScreen();
+          } else {
+            // المستخدم غير مسجل → اذهب إلى SplashScreen
+            return const SplashScreen();
+          }
+        },
+        loading: () => const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        error: (error, _) => Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, size: 64, color: Colors.red),
+                const SizedBox(height: 16),
+                Text('Error: $error'),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    ref.invalidate(authStateProvider);
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case '/splash':

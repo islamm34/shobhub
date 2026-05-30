@@ -120,7 +120,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       _hasMore = true;
     });
     await _loadInitialData();
-    // تحديث الـ Wishlist
     ref.invalidate(wishlistItemsProvider);
   }
 
@@ -146,7 +145,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     try {
       if (isInWishlist) {
-        await controller.removeFromWishlist(product.title! as String);
+        await controller.removeFromWishlist(product.title!);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -180,6 +179,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       }
     }
   }
+
   void _navigateToSaleProducts() {
     Navigator.of(context).pushNamed('/sale-products');
   }
@@ -198,6 +198,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final wishlistItemsAsync = ref.watch(wishlistItemsProvider);
     final isLoggedIn = user != null;
 
+    // ✅ إذا لم يكن المستخدم مسجل دخوله، اعرض رسالة
+    if (!isLoggedIn) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.lock_outline,
+                size: 80,
+                color: isDark ? AppColors.neutral_500 : AppColors.neutral_400,
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Please Login',
+                style: AppTypography.headline2(
+                  color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'You need to login to access this content',
+                style: AppTypography.bodyLarge(
+                  color: isDark ? AppColors.neutral_400 : AppColors.neutral_600,
+                ),
+              ),
+              const SizedBox(height: 32),
+              PremiumButton(
+                label: 'Go to Login',
+                onPressed: () => Navigator.of(context).pushReplacementNamed('/login'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // ✅ باقي الكود كما هو إذا كان المستخدم مسجل دخوله
     final dummyUser = DummyDataProvider.currentUser;
 
     return Scaffold(

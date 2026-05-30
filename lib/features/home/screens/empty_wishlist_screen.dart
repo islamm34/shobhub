@@ -16,9 +16,8 @@ class WishlistScreen extends ConsumerWidget {
     final controller = ref.watch(wishlistControllerProvider);
 
     return Scaffold(
-      appBar: PremiumAppBar(
-        title: 'My Wishlist',
-        showBackButton: true,
+      appBar: AppBar(
+        title:Text('My Wishlist') ,
         actions: [
           if (wishlistItemsAsync.hasValue &&
               wishlistItemsAsync.value!.isNotEmpty)

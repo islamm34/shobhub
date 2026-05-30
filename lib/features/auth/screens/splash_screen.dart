@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../providers/auth_provider.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     super.initState();
@@ -19,18 +20,28 @@ class _SplashScreenState extends State<SplashScreen> {
     // انتظار قليلاً لإظهار شاشة Splash
     await Future.delayed(const Duration(seconds: 2));
 
-    // ✅ التحقق من حالة تسجيل الدخول
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    // ✅ التحقق من حالة تسجيل الدخول من Firebase
+    final authState = ref.read(authStateProvider);
 
     if (mounted) {
-      if (isLoggedIn) {
-        // المستخدم مسجل دخوله → اذهب للرئيسية
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        // المستخدم غير مسجل → اذهب للترحيب أو onboarding
-        Navigator.pushReplacementNamed(context, '/onboarding');
-      }
+      authState.when(
+        data: (user) {
+          if (user != null) {
+            // المستخدم مسجل دخوله → اذهب للرئيسية
+            Navigator.pushReplacementNamed(context, '/home');
+          } else {
+            // المستخدم غير مسجل → اذهب للترحيب
+            Navigator.pushReplacementNamed(context, '/onboarding');
+          }
+        },
+        loading: () {
+          // لا تفعل شيء، انتظر
+        },
+        error: (error, _) {
+          // في حالة الخطأ، اذهب للترحيب
+          Navigator.pushReplacementNamed(context, '/onboarding');
+        },
+      );
     }
   }
 
