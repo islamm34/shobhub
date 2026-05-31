@@ -3,7 +3,7 @@ import 'product_model.dart';
 
 part 'wishlist_item.g.dart';
 
-@HiveType(typeId: 0)
+@HiveType(typeId: 1)  // ✅ تغيير إلى 1 (يختلف عن CartItemModel)
 class WishlistItem {
   @HiveField(0)
   final int id;
@@ -46,7 +46,6 @@ class WishlistItem {
 
   int get discountPercent => discountPercentage.toInt();
 
-  // ✅ دالة لتحويل البيانات إلى Map (لـ Firestore)
   Map<String, dynamic> toFirestore() {
     return {
       'id': id,
@@ -60,11 +59,10 @@ class WishlistItem {
     };
   }
 
-  // ✅ دالة لإنشاء كائن من Map (من Firestore)
   factory WishlistItem.fromFirestore(
-    Map<String, dynamic> data,
-    String documentId,
-  ) {
+      Map<String, dynamic> data,
+      String documentId,
+      ) {
     return WishlistItem(
       id: data['id'] as int,
       title: data['title'] as String,

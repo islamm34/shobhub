@@ -65,7 +65,7 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(path: '/empty-wishlist', builder: (context, state) => const WishlistScreen()),
-    GoRoute(path: '/empty-cart', builder: (context, state) => const EmptyCartScreen()),
+    GoRoute(path: '/empty-cart', builder: (context, state) => const CartScreen()),
     GoRoute(path: '/no-internet', builder: (context, state) => const NoInternetScreen()),
     GoRoute(path: '/error', builder: (context, state) => const ErrorStateScreen()),
     GoRoute(path: '/empty-search', builder: (context, state) => const EmptySearchScreen()),

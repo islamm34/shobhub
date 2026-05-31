@@ -3,14 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'models/cart_item_model.dart';
 import 'models/wishlist_item.dart';
 import 'core/theme/app_theme.dart';
 import 'core/services/api_service.dart';
 import 'core/services/secure_storage_service.dart';
+import 'core/services/database_service.dart';
 import 'features/home/screens/empty_wishlist_screen.dart';
 import 'features/home/screens/sale_products_screen.dart';
 import 'providers/wishlist_provider.dart';
-import 'providers/auth_provider.dart';
 import 'features/auth/screens/splash_screen.dart';
 import 'features/auth/screens/onboarding_screen.dart';
 import 'features/auth/screens/welcome_screen.dart';
@@ -49,87 +50,42 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ✅ تهيئة Hive
+  // ✅ تهيئة Hive أولاً
   await Hive.initFlutter();
-  Hive.registerAdapter(WishlistItemAdapter());
-  await Hive.openBox('wishlist_box');
 
-  // ✅ تهيئة Firebase
+  // ✅ تسجيل الـ Adapters (مرة واحدة فقط هنا)
+  Hive.registerAdapter(CartItemModelAdapter());  // typeId 0
+  Hive.registerAdapter(WishlistItemAdapter());    // typeId 1
+
+  // ✅ فتح الـ Boxes
+  await Hive.openBox<CartItemModel>('cart_box');
+  await Hive.openBox('wishlist_box');
+  await Hive.openBox('user_box');
+
+  print('✅ Hive boxes opened successfully');
+
+  // ✅ تهيئة DatabaseService (بدون تسجيل Adapters)
+  await DatabaseService().init();
+
+  // ✅ باقي التهيئات...
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  FirebaseFirestore.instance.settings = const Settings(
-    persistenceEnabled: true,
-    cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
-  );
-
-  // تهيئة ApiService
-  final apiService = ApiService();
-  await apiService.init();
-
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
 }
 
-class MyApp extends ConsumerStatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
-  ConsumerState<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends ConsumerState<MyApp> {
-  @override
   Widget build(BuildContext context) {
-    // ✅ الاستماع إلى حالة تسجيل الدخول
-    final authState = ref.watch(authStateProvider);
-
     return MaterialApp(
       title: 'ShopHub - Ecommerce App',
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      // ✅ تحديد الشاشة الابتدائية بناءً على حالة تسجيل الدخول
-      home: authState.when(
-        data: (user) {
-          if (user != null) {
-            // المستخدم مسجل دخوله → اذهب إلى HomeScreen
-            return const HomeScreen();
-          } else {
-            // المستخدم غير مسجل → اذهب إلى SplashScreen
-            return const SplashScreen();
-          }
-        },
-        loading: () => const Scaffold(
-          body: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-        error: (error, _) => Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 64, color: Colors.red),
-                const SizedBox(height: 16),
-                Text('Error: $error'),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    ref.invalidate(authStateProvider);
-                  },
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      home: const SplashScreen(),
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case '/splash':
@@ -178,7 +134,7 @@ class _MyAppState extends ConsumerState<MyApp> {
           case '/new-arrivals':
             return MaterialPageRoute(builder: (_) => const SearchScreen());
           case '/empty-cart':
-            return MaterialPageRoute(builder: (_) => const EmptyCartScreen());
+            return MaterialPageRoute(builder: (_) => const CartScreen());
           case '/no-internet':
             return MaterialPageRoute(builder: (_) => const NoInternetScreen());
           case '/error':

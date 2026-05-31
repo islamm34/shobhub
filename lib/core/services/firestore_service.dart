@@ -41,7 +41,7 @@ class FirestoreService {
           'displayName': _auth.currentUser?.displayName ?? '',
           'createdAt': FieldValue.serverTimestamp(),
           'wishlistNames': [],  // ✅ تخزين أسماء المنتجات
-          'cart': [],
+          'cart': [],           // ✅ تخزين السلة
         });
         print('✅ User document created for: ${_auth.currentUser?.email}');
       } else {
@@ -52,7 +52,7 @@ class FirestoreService {
     }
   }
 
-  // ==================== Wishlist Functions (بالاسم) ====================
+  // ==================== Wishlist Functions ====================
 
   // ✅ الحصول على قائمة Wishlist (كـ List of Strings)
   Future<List<String>> getWishlistNames() async {
@@ -74,7 +74,7 @@ class FirestoreService {
     return [];
   }
 
-  // ✅ Stream للاستماع للتغييرات في Wishlist (يعيد List<String>)
+  // ✅ Stream للاستماع للتغييرات في Wishlist
   Stream<List<String>> getWishlistStream() {
     if (!isUserLoggedIn) {
       return Stream.value([]);

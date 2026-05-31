@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../core/services/firestore_service.dart';
+import '../core/services/database_service.dart';
 
 final authStateProvider = StreamProvider<User?>((ref) {
   return FirebaseAuth.instance.authStateChanges();
@@ -26,6 +27,18 @@ class AuthService {
 
   AuthService(this._auth, this._googleSignIn);
 
+  Future<void> _saveUserToLocalDatabase(User user) async {
+    final dbService = DatabaseService();
+    final exists = await dbService.userExists(user.uid);
+    if (!exists) {
+      await dbService.insertUser(
+        user.uid,
+        user.email ?? '',
+        user.displayName ?? '',
+      );
+    }
+  }
+
   Future<User?> signInWithEmailAndPassword(String email, String password) async {
     try {
       final userCredential = await _auth.signInWithEmailAndPassword(
@@ -33,9 +46,9 @@ class AuthService {
         password: password,
       );
 
-      // ✅ تهيئة وثيقة المستخدم في Firestore بعد تسجيل الدخول
       if (userCredential.user != null) {
         await FirestoreService().initUserDocument();
+        await _saveUserToLocalDatabase(userCredential.user!);
       }
 
       return userCredential.user;
@@ -57,9 +70,9 @@ class AuthService {
       await userCredential.user?.updateDisplayName(name);
       await userCredential.user?.reload();
 
-      // ✅ تهيئة وثيقة المستخدم في Firestore بعد إنشاء الحساب
       if (userCredential.user != null) {
         await FirestoreService().initUserDocument();
+        await _saveUserToLocalDatabase(userCredential.user!);
       }
 
       return userCredential.user;
@@ -82,9 +95,9 @@ class AuthService {
 
       final userCredential = await _auth.signInWithCredential(credential);
 
-      // ✅ تهيئة وثيقة المستخدم في Firestore بعد تسجيل الدخول بـ Google
       if (userCredential.user != null) {
         await FirestoreService().initUserDocument();
+        await _saveUserToLocalDatabase(userCredential.user!);
       }
 
       return userCredential.user;

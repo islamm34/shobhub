@@ -5,6 +5,8 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/services/api_service.dart';
 import '../../../models/product_model.dart';
 import '../../../providers/wishlist_provider.dart';
+import '../../../providers/cart_provider.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../shared/widgets/base_widgets.dart';
 import '../../../shared/widgets/component_widgets.dart';
 
@@ -47,16 +49,28 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   }
 
   void _toggleWishlist(ProductModel product) async {
+    final currentUser = ref.read(currentUserProvider);
+
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please login to add to wishlist'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      Navigator.of(context).pushNamed('/login');
+      return;
+    }
+
     final controller = ref.read(wishlistControllerProvider);
     final wishlistItemsAsync = ref.read(wishlistItemsProvider);
-
-    bool isInWishlist = false;
-    wishlistItemsAsync.whenData((items) {
-      isInWishlist = items.any((item) => item.id == product.id);
-    });
+    final wishlistItems = wishlistItemsAsync.valueOrNull ?? [];
+    final isInWishlist = wishlistItems.any(
+      (item) => item.title == product.title,
+    );
 
     if (isInWishlist) {
-      await controller.removeFromWishlist(product.id! as String);
+      await controller.removeFromWishlist(product.title!);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Removed from wishlist'),
@@ -76,6 +90,35 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     }
   }
 
+  void _addToCart(ProductModel product) async {
+    final currentUser = ref.read(currentUserProvider);
+
+    if (currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please login to add to cart'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      Navigator.of(context).pushNamed('/login');
+      return;
+    }
+
+    final cartController = ref.read(cartControllerProvider);
+    await cartController.addToCart(product, quantity: quantity);
+
+    // ✅ إظهار رسالة نجاح
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Added $quantity item(s) to cart'),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    // ✅ تحديث السلة فوراً
+    ref.invalidate(cartItemsProvider);
+  }
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -93,7 +136,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 final product = snapshot.data!;
                 return wishlistItemsAsync.when(
                   data: (wishlistItems) {
-                    final isInWishlist = wishlistItems.any((item) => item.id == product.id);
+                    final isInWishlist = wishlistItems.any(
+                      (item) => item.title == product.title,
+                    );
                     return GestureDetector(
                       onTap: () => _toggleWishlist(product),
                       child: Container(
@@ -435,20 +480,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   const SizedBox(height: 24),
                   PremiumButton(
                     label: 'Add to Cart',
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Added $quantity item(s) to cart',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          backgroundColor: isDark
-                              ? AppColors.darkPrimary
-                              : AppColors.lightPrimary,
-                          duration: const Duration(seconds: 2),
-                        ),
-                      );
-                    },
+                    onPressed: () => _addToCart(product),
                   ),
                   const SizedBox(height: 12),
                   PremiumButton(
