@@ -1,5 +1,4 @@
 import 'product_model.dart';
-
 /// عنصر في السلة
 class CartItemModel {
   final ProductModel product;
