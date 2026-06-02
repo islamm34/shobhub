@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../providers/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -20,26 +21,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     // انتظار قليلاً لإظهار شاشة Splash
     await Future.delayed(const Duration(seconds: 2));
 
-    // ✅ التحقق من حالة تسجيل الدخول من Firebase
     final authState = ref.read(authStateProvider);
 
     if (mounted) {
       authState.when(
         data: (user) {
           if (user != null) {
-            // المستخدم مسجل دخوله → اذهب للرئيسية
-            Navigator.pushReplacementNamed(context, '/home');
+            // ✅ استخدام GoRouter للتنقل
+            context.go('/home');
           } else {
-            // المستخدم غير مسجل → اذهب للترحيب
-            Navigator.pushReplacementNamed(context, '/onboarding');
+            context.go('/onboarding');
           }
         },
-        loading: () {
-          // لا تفعل شيء، انتظر
-        },
-        error: (error, _) {
-          // في حالة الخطأ، اذهب للترحيب
-          Navigator.pushReplacementNamed(context, '/onboarding');
+        loading: () {},
+        error: (_, __) {
+          context.go('/onboarding');
         },
       );
     }

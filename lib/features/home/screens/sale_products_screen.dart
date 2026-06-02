@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/services/api_service.dart';
@@ -8,6 +9,9 @@ import '../../../models/wishlist_item.dart';
 import '../../../providers/wishlist_provider.dart';
 import '../../../shared/widgets/base_widgets.dart';
 import '../../../shared/widgets/component_widgets.dart';
+
+// ✅ Provider محلي لتحديث حالة القلب فوراً
+final localWishlistProvider = StateProvider<Set<int>>((ref) => {});
 
 class SaleProductsScreen extends ConsumerStatefulWidget {
   const SaleProductsScreen({super.key});
@@ -24,6 +28,9 @@ class _SaleProductsScreenState extends ConsumerState<SaleProductsScreen> {
   int _currentSkip = 0;
   static const int _limit = 20;
 
+  // ✅ مجموعة محلية لتتبع المنتجات المفضلة مؤقتاً
+  Set<int> _localWishlist = {};
+
   late ScrollController _scrollController;
 
   @override
@@ -32,6 +39,16 @@ class _SaleProductsScreenState extends ConsumerState<SaleProductsScreen> {
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
     _loadSaleProducts();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // ✅ تحميل الـ Wishlist المحلي من الـ Provider
+    final savedWishlist = ref.read(wishlistItemsProvider).valueOrNull;
+    if (savedWishlist != null) {
+      _localWishlist = savedWishlist.map((item) => item.id).toSet();
+    }
   }
 
   void _onScroll() {
@@ -126,16 +143,20 @@ class _SaleProductsScreenState extends ConsumerState<SaleProductsScreen> {
 
   void _toggleWishlist(ProductModel product) async {
     final controller = ref.read(wishlistControllerProvider);
-    final wishlistItemsAsync = ref.read(wishlistItemsProvider);
+    final isCurrentlyInWishlist = _localWishlist.contains(product.id);
 
-    bool isInWishlist = false;
-    wishlistItemsAsync.whenData((items) {
-      isInWishlist = items.any((item) => item.id == product.id);
+    // ✅ تحديث الواجهة فوراً (تغيير لون القلب)
+    setState(() {
+      if (isCurrentlyInWishlist) {
+        _localWishlist.remove(product.id);
+      } else {
+        _localWishlist.add(product.id!);
+      }
     });
 
     try {
-      if (isInWishlist) {
-        await controller.removeFromWishlist(product.id! as String);
+      if (isCurrentlyInWishlist) {
+        await controller.removeFromWishlist(product.title!);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -157,7 +178,17 @@ class _SaleProductsScreenState extends ConsumerState<SaleProductsScreen> {
           );
         }
       }
+      // ✅ تحديث الـ Provider الخلفي (اختياري، في الخلفية)
+      ref.invalidate(wishlistItemsProvider);
     } catch (e) {
+      // ✅ في حالة الخطأ، نرجع الحالة السابقة
+      setState(() {
+        if (isCurrentlyInWishlist) {
+          _localWishlist.add(product.id!);
+        } else {
+          _localWishlist.remove(product.id);
+        }
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -179,7 +210,6 @@ class _SaleProductsScreenState extends ConsumerState<SaleProductsScreen> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final wishlistItemsAsync = ref.watch(wishlistItemsProvider);
 
     return Scaffold(
       appBar: PremiumAppBar(title: 'Summer Sale', showBackButton: true),
@@ -191,171 +221,167 @@ class _SaleProductsScreenState extends ConsumerState<SaleProductsScreen> {
       )
           : RefreshIndicator(
         onRefresh: _refreshData,
-        child: wishlistItemsAsync.when(
-          data: (wishlistItems) => CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverToBoxAdapter(
-                child: Container(
-                  margin: const EdgeInsets.all(16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        AppColors.lightError,
-                        AppColors.lightTertiary,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.local_offer,
-                          color: AppColors.lightError,
-                          size: 30,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Summer Sale!',
-                              style: AppTypography.headline3(
-                                color: Colors.white,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Get up to 40% off on selected items',
-                              style: AppTypography.bodyMedium(
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            SliverToBoxAdapter(
+              child: Container(
+                margin: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.lightError,
+                      AppColors.lightTertiary,
                     ],
                   ),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    '${_saleProducts.length} products on sale',
-                    style: AppTypography.bodyMedium(
-                      color: isDark
-                          ? AppColors.neutral_400
-                          : AppColors.neutral_600,
-                    ),
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: const EdgeInsets.all(16),
-                sliver: SliverGrid(
-                  gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.7,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                  ),
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    if (index >= _saleProducts.length) {
-                      return const SizedBox();
-                    }
-                    final product = _saleProducts[index];
-                    return _buildProductCard(product, isDark, wishlistItems);
-                  }, childCount: _saleProducts.length),
-                ),
-              ),
-              if (_isLoadingMore)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: isDark
-                            ? AppColors.darkPrimary
-                            : AppColors.lightPrimary,
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.local_offer,
+                        color: AppColors.lightError,
+                        size: 30,
                       ),
                     ),
-                  ),
-                ),
-              if (!_hasMore && _saleProducts.isNotEmpty)
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Center(
-                      child: Text(
-                        'You\'ve seen all sale products',
-                        style: AppTypography.bodySmall(
-                          color: isDark
-                              ? AppColors.neutral_400
-                              : AppColors.neutral_600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              if (_saleProducts.isEmpty && !_isLoading)
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: MediaQuery.of(context).size.height - 300,
-                    child: Center(
+                    const SizedBox(width: 16),
+                    Expanded(
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.local_offer_outlined,
-                            size: 80,
-                            color: isDark
-                                ? AppColors.neutral_500
-                                : AppColors.neutral_400,
-                          ),
-                          const SizedBox(height: 16),
                           Text(
-                            'No products on sale',
+                            'Summer Sale!',
                             style: AppTypography.headline3(
-                              color: isDark
-                                  ? AppColors.darkOnBackground
-                                  : AppColors.lightOnBackground,
+                              color: Colors.white,
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 4),
                           Text(
-                            'Check back later for amazing deals',
+                            'Get up to 40% off on selected items',
                             style: AppTypography.bodyMedium(
-                              color: isDark
-                                  ? AppColors.neutral_400
-                                  : AppColors.neutral_600,
+                              color: Colors.white.withOpacity(0.9),
                             ),
-                          ),
-                          const SizedBox(height: 24),
-                          PremiumButton(
-                            label: 'Browse All Products',
-                            onPressed: () => Navigator.of(context).pop(),
                           ),
                         ],
                       ),
                     ),
+                  ],
+                ),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  '${_saleProducts.length} products on sale',
+                  style: AppTypography.bodyMedium(
+                    color: isDark
+                        ? AppColors.neutral_400
+                        : AppColors.neutral_600,
                   ),
                 ),
-              const SliverToBoxAdapter(child: SizedBox(height: 80)),
-            ],
-          ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(child: Text('Error: $error')),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.all(16),
+              sliver: SliverGrid(
+                gridDelegate:
+                const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.7,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  if (index >= _saleProducts.length) {
+                    return const SizedBox();
+                  }
+                  final product = _saleProducts[index];
+                  return _buildProductCard(product, isDark);
+                }, childCount: _saleProducts.length),
+              ),
+            ),
+            if (_isLoadingMore)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: isDark
+                          ? AppColors.darkPrimary
+                          : AppColors.lightPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            if (!_hasMore && _saleProducts.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Center(
+                    child: Text(
+                      'You\'ve seen all sale products',
+                      style: AppTypography.bodySmall(
+                        color: isDark
+                            ? AppColors.neutral_400
+                            : AppColors.neutral_600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            if (_saleProducts.isEmpty && !_isLoading)
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height - 300,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.local_offer_outlined,
+                          size: 80,
+                          color: isDark
+                              ? AppColors.neutral_500
+                              : AppColors.neutral_400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No products on sale',
+                          style: AppTypography.headline3(
+                            color: isDark
+                                ? AppColors.darkOnBackground
+                                : AppColors.lightOnBackground,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Check back later for amazing deals',
+                          style: AppTypography.bodyMedium(
+                            color: isDark
+                                ? AppColors.neutral_400
+                                : AppColors.neutral_600,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        PremiumButton(
+                          label: 'Browse All Products',
+                          onPressed: () => context.pop(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            const SliverToBoxAdapter(child: SizedBox(height: 80)),
+          ],
         ),
       ),
     );
@@ -364,22 +390,23 @@ class _SaleProductsScreenState extends ConsumerState<SaleProductsScreen> {
   Widget _buildProductCard(
       ProductModel product,
       bool isDark,
-      List<WishlistItem> wishlistItems,
       ) {
-    final isInWishlist = wishlistItems.any((item) => item.id == product.id);
+    // ✅ استخدام الحالة المحلية لتحديد لون القلب
+    final isInWishlist = _localWishlist.contains(product.id);
     final discountPercent = product.discountPercent;
 
     return GestureDetector(
-      onTap: () => Navigator.of(
-        context,
-      ).pushNamed('/product-detail', arguments: {'productId': product.id ?? 0}),
+      onTap: () => context.push(
+        '/product-detail',
+        extra: product.id ?? 0,
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
-              color: Colors.black,
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/responsive_helper.dart';
@@ -15,8 +16,8 @@ import '../../../providers/auth_provider.dart';
 import '../../../shared/models/dummy_models.dart';
 import '../../../shared/widgets/base_widgets.dart';
 import '../../../shared/widgets/component_widgets.dart';
+import 'empty_cart_screen.dart';
 import 'empty_wishlist_screen.dart';
-import 'sale_products_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -135,7 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           duration: Duration(seconds: 2),
         ),
       );
-      Navigator.of(context).pushNamed('/login');
+      context.push('/login');
       return;
     }
 
@@ -181,7 +182,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   void _navigateToSaleProducts() {
-    Navigator.of(context).pushNamed('/sale-products');
+    context.push('/sale-products');
   }
 
   @override
@@ -227,7 +228,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               const SizedBox(height: 32),
               PremiumButton(
                 label: 'Go to Login',
-                onPressed: () => Navigator.of(context).pushReplacementNamed('/login'),
+                onPressed: () => context.go('/login'),
               ),
             ],
           ),
@@ -235,7 +236,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       );
     }
 
-    // ✅ باقي الكود كما هو إذا كان المستخدم مسجل دخوله
     final dummyUser = DummyDataProvider.currentUser;
 
     return Scaffold(
@@ -272,7 +272,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               : _buildLoginRequiredView(isDark, 'Your Wishlist'),
 
           // Cart Tab
-          _buildCartView(isDark),
+          const EmptyCartScreen(),
 
           // Profile Tab
           _buildProfileView(dummyUser, isDark),
@@ -311,7 +311,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           const SizedBox(height: 24),
           PremiumButton(
             label: 'Login',
-            onPressed: () => Navigator.of(context).pushNamed('/login'),
+            onPressed: () => context.push('/login'),
           ),
         ],
       ),
@@ -409,9 +409,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final isInWishlist = wishlistItems.any((item) => item.id == product.id);
 
     return GestureDetector(
-      onTap: () => Navigator.of(
-        context,
-      ).pushNamed('/product-detail', arguments: {'productId': product.id ?? 0}),
+      onTap: () => context.push(
+        '/product-detail',
+        extra: product.id ?? 0,
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
@@ -592,7 +593,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ),
         ),
         GestureDetector(
-          onTap: () => Navigator.of(context).pushNamed('/best-sellers'),
+          onTap: () => context.push('/best-sellers'),
           child: Text(
             'See All',
             style: AppTypography.labelMedium(
@@ -631,7 +632,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           ],
         ),
         GestureDetector(
-          onTap: () => Navigator.of(context).pushNamed('/notifications'),
+          onTap: () => context.push('/notifications'),
           child: Container(
             width: 45,
             height: 45,
@@ -655,7 +656,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget _buildSearchBar(bool isDark) {
     return GestureDetector(
-      onTap: () => Navigator.of(context).pushNamed('/search'),
+      onTap: () => context.push('/search'),
       child: Container(
         height: 48,
         decoration: BoxDecoration(
@@ -808,9 +809,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               return CategoryCard(
                 categoryName: category.name ?? 'Category',
                 icon: Icons.shopping_bag_rounded,
-                onTap: () => Navigator.of(context).pushNamed(
+                onTap: () => context.push(
                   '/category-products',
-                  arguments: {
+                  extra: {
                     'category': category.slug ?? '',
                     'categoryName': category.name ?? 'Category',
                   },
@@ -851,9 +852,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               itemBuilder: (context, index) {
                 final category = _categories[index];
                 return GestureDetector(
-                  onTap: () => Navigator.of(context).pushNamed(
+                  onTap: () => context.push(
                     '/category-products',
-                    arguments: {
+                    extra: {
                       'category': category.slug ?? '',
                       'categoryName': category.name ?? 'Category',
                     },
@@ -944,39 +945,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildCartView(bool isDark) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.shopping_cart_outlined,
-            size: 64,
-            color: isDark ? AppColors.neutral_500 : AppColors.neutral_400,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Your cart is empty',
-            style: AppTypography.headline3(
-              color: isDark
-                  ? AppColors.darkOnBackground
-                  : AppColors.lightOnBackground,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Add some items to get started',
-            style: AppTypography.bodyMedium(
-              color: isDark ? AppColors.neutral_400 : AppColors.neutral_600,
-            ),
-          ),
-          const SizedBox(height: 24),
-          PremiumButton(
-            label: 'Start Shopping',
-            onPressed: () => setState(() => _currentNavIndex = 0),
-          ),
-        ],
-      ),
-    );
+    return const EmptyCartScreen();
   }
 
   Widget _buildGlassBottomNavigationBar(bool isDark) {
@@ -1208,31 +1177,31 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               icon: Icons.person_outline,
               title: 'Edit Profile',
               isDark: isDark,
-              onTap: () => Navigator.of(context).pushNamed('/edit-profile'),
+              onTap: () => context.push('/edit-profile'),
             ),
             _buildProfileMenuItem(
               icon: Icons.shopping_bag_outlined,
               title: 'My Orders',
               isDark: isDark,
-              onTap: () => Navigator.of(context).pushNamed('/orders-history'),
+              onTap: () => context.push('/orders-history'),
             ),
             _buildProfileMenuItem(
               icon: Icons.notifications_outlined,
               title: 'Notifications',
               isDark: isDark,
-              onTap: () => Navigator.of(context).pushNamed('/notifications'),
+              onTap: () => context.push('/notifications'),
             ),
             _buildProfileMenuItem(
               icon: Icons.settings_outlined,
               title: 'Settings',
               isDark: isDark,
-              onTap: () => Navigator.of(context).pushNamed('/settings'),
+              onTap: () => context.push('/settings'),
             ),
             _buildProfileMenuItem(
               icon: Icons.help_outline,
               title: 'Help & Support',
               isDark: isDark,
-              onTap: () => Navigator.of(context).pushNamed('/help-support'),
+              onTap: () => context.push('/help-support'),
             ),
             const SizedBox(height: 24),
             PremiumButton(
@@ -1243,7 +1212,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 await authService.signOut();
                 if (mounted) {
                   ref.invalidate(wishlistItemsProvider);
-                  Navigator.of(context).pushReplacementNamed('/welcome');
+                  context.go('/welcome');
                 }
               },
             ),
