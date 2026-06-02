@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/widgets/base_widgets.dart';
+import '../../../shared/widgets/component_widgets.dart';
 
 class OrderSuccessScreen extends StatefulWidget {
   const OrderSuccessScreen({Key? key}) : super(key: key);
@@ -23,11 +24,9 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen>
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
-
     _scaleAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.elasticOut),
     );
-
     _animationController.forward();
   }
 
@@ -61,9 +60,7 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen>
                       end: Alignment.bottomRight,
                       colors: [
                         AppColors.lightSuccess,
-                        isDark
-                            ? AppColors.darkSuccess
-                            : AppColors.lightSuccess,
+                        isDark ? AppColors.darkSuccess : AppColors.lightSuccess,
                       ],
                     ),
                   ),
@@ -79,9 +76,7 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen>
                 'Order Placed Successfully!',
                 textAlign: TextAlign.center,
                 style: AppTypography.headline2(
-                  color: isDark
-                      ? AppColors.darkOnBackground
-                      : AppColors.lightOnBackground,
+                  color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
                 ),
               ),
               const SizedBox(height: 12),
@@ -93,8 +88,12 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen>
                 ),
               ),
               const SizedBox(height: 32),
-              // Order Details
-              PremiumCard(
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Column(
                   children: [
                     Row(
@@ -103,26 +102,20 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen>
                         Text(
                           'Order Number',
                           style: AppTypography.bodyMedium(
-                            color: isDark
-                                ? AppColors.neutral_400
-                                : AppColors.neutral_600,
+                            color: isDark ? AppColors.neutral_400 : AppColors.neutral_600,
                           ),
                         ),
                         Text(
-                          '#ORD-2024-001',
+                          '#ORD-${DateTime.now().millisecondsSinceEpoch}',
                           style: AppTypography.labelLarge(
-                            color: isDark
-                                ? AppColors.darkOnBackground
-                                : AppColors.lightOnBackground,
+                            color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
                             weight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Divider(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    ),
+                    Divider(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
                     const SizedBox(height: 12),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -130,44 +123,13 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen>
                         Text(
                           'Estimated Delivery',
                           style: AppTypography.bodyMedium(
-                            color: isDark
-                                ? AppColors.neutral_400
-                                : AppColors.neutral_600,
+                            color: isDark ? AppColors.neutral_400 : AppColors.neutral_600,
                           ),
                         ),
                         Text(
-                          'Dec 28, 2024',
+                          _getEstimatedDelivery(),
                           style: AppTypography.labelLarge(
-                            color: isDark
-                                ? AppColors.darkOnBackground
-                                : AppColors.lightOnBackground,
-                            weight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Divider(
-                      color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Total Amount',
-                          style: AppTypography.bodyMedium(
-                            color: isDark
-                                ? AppColors.neutral_400
-                                : AppColors.neutral_600,
-                          ),
-                        ),
-                        Text(
-                          '\$689.98',
-                          style: AppTypography.headline4(
-                            color: isDark
-                                ? AppColors.darkPrimary
-                                : AppColors.lightPrimary,
+                            color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
                             weight: FontWeight.bold,
                           ),
                         ),
@@ -179,15 +141,13 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen>
               const SizedBox(height: 32),
               PremiumButton(
                 label: 'Track Order',
-                onPressed: () =>
-                    Navigator.of(context).pushNamed('/order-tracking'),
+                onPressed: () => context.push('/order-tracking'),
               ),
               const SizedBox(height: 12),
               PremiumButton(
                 label: 'Continue Shopping',
                 variant: ButtonVariant.outline,
-                onPressed: () =>
-                    Navigator.of(context).pushReplacementNamed('/home'),
+                onPressed: () => context.go('/home'),
               ),
             ],
           ),
@@ -195,5 +155,9 @@ class _OrderSuccessScreenState extends State<OrderSuccessScreen>
       ),
     );
   }
-}
 
+  String _getEstimatedDelivery() {
+    final date = DateTime.now().add(const Duration(days: 5));
+    return '${date.month}/${date.day}/${date.year}';
+  }
+}

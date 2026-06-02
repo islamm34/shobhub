@@ -142,7 +142,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     final wishlistItemsAsync = ref.read(wishlistItemsProvider);
     final wishlistItems = wishlistItemsAsync.valueOrNull ?? [];
-    final isInWishlist = wishlistItems.any((item) => item.title == product.title);
+    final isInWishlist = wishlistItems.any(
+      (item) => item.title == product.title,
+    );
 
     try {
       if (isInWishlist) {
@@ -198,7 +200,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final user = ref.watch(currentUserProvider);
     final wishlistItemsAsync = ref.watch(wishlistItemsProvider);
     final isLoggedIn = user != null;
-
     // ✅ إذا لم يكن المستخدم مسجل دخوله، اعرض رسالة
     if (!isLoggedIn) {
       return Scaffold(
@@ -215,7 +216,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               Text(
                 'Please Login',
                 style: AppTypography.headline2(
-                  color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
+                  color: isDark
+                      ? AppColors.darkOnBackground
+                      : AppColors.lightOnBackground,
                 ),
               ),
               const SizedBox(height: 12),
@@ -235,9 +238,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ),
       );
     }
-
     final dummyUser = DummyDataProvider.currentUser;
-
     return Scaffold(
       backgroundColor: isDark
           ? AppColors.darkBackground
@@ -250,30 +251,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             onRefresh: _refreshData,
             child: _isLoading
                 ? Center(
-              child: CircularProgressIndicator(
-                color: isDark
-                    ? AppColors.darkPrimary
-                    : AppColors.lightPrimary,
-              ),
-            )
-                : _buildHomeView(isDark, wishlistItemsAsync.valueOrNull ?? [], user),
+                    child: CircularProgressIndicator(
+                      color: isDark
+                          ? AppColors.darkPrimary
+                          : AppColors.lightPrimary,
+                    ),
+                  )
+                : _buildHomeView(
+                    isDark,
+                    wishlistItemsAsync.valueOrNull ?? [],
+                    user,
+                  ),
           ),
-
           // Categories Tab
           _buildCategoriesView(isDark),
-
           // Wishlist Tab
           isLoggedIn
               ? wishlistItemsAsync.when(
-            data: (wishlistItems) => _buildWishlistView(isDark, wishlistItems),
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(child: Text('Error: $error')),
-          )
+                  data: (wishlistItems) =>
+                      _buildWishlistView(isDark, wishlistItems),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, _) => Center(child: Text('Error: $error')),
+                )
               : _buildLoginRequiredView(isDark, 'Your Wishlist'),
-
           // Cart Tab
           const CartScreen(),
-
           // Profile Tab
           _buildProfileView(dummyUser, isDark),
         ],
@@ -319,10 +322,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildHomeView(
-      bool isDark,
-      List<WishlistItem> wishlistItems,
-      firebase_auth.User? user,
-      ) {
+    bool isDark,
+    List<WishlistItem> wishlistItems,
+    firebase_auth.User? user,
+  ) {
     return SafeArea(
       child: CustomScrollView(
         controller: _scrollController,
@@ -402,17 +405,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildProductCard(
-      ProductModel product,
-      bool isDark,
-      List<WishlistItem> wishlistItems,
-      ) {
+    ProductModel product,
+    bool isDark,
+    List<WishlistItem> wishlistItems,
+  ) {
     final isInWishlist = wishlistItems.any((item) => item.id == product.id);
 
     return GestureDetector(
-      onTap: () => context.push(
-        '/product-detail',
-        extra: product.id ?? 0,
-      ),
+      onTap: () => context.push('/product-detail', extra: product.id ?? 0),
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
@@ -606,7 +606,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildHeader(bool isDark, firebase_auth.User? user) {
-    final userName = user?.displayName ?? user?.email?.split('@').first ?? 'Guest';
+    final userName =
+        user?.displayName ?? user?.email?.split('@').first ?? 'Guest';
     final userEmail = user?.email ?? 'Sign in to continue';
 
     return Row(

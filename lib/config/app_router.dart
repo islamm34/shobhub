@@ -127,6 +127,10 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) => const CartScreen(),
     ),
     GoRoute(
+      path: '/delivery-method',
+      builder: (context, state) => const DeliveryMethodScreen(),
+    ),
+    GoRoute(
       path: '/sale-products',
       builder: (context, state) => const SaleProductsScreen(),
     ),

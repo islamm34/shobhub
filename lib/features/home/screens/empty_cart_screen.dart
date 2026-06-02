@@ -3,11 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../models/cart_item_model.dart' hide CartItemModel;
 import '../../../providers/cart_provider.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../shared/widgets/base_widgets.dart';
-import '../../../shared/widgets/component_widgets.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
@@ -39,7 +37,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           centerTitle: true,
           backgroundColor: Colors.transparent,
           elevation: 0,
-
         ),
         body: Center(
           child: Column(
@@ -54,7 +51,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               Text(
                 'Please Login',
                 style: AppTypography.headline2(
-                  color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
+                  color: isDark
+                      ? AppColors.darkOnBackground
+                      : AppColors.lightOnBackground,
                 ),
               ),
               const SizedBox(height: 12),
@@ -91,7 +90,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       context: context,
                       builder: (context) => AlertDialog(
                         title: const Text('Clear Cart'),
-                        content: const Text('Are you sure you want to remove all items from your cart?'),
+                        content: const Text(
+                          'Are you sure you want to remove all items from your cart?',
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
@@ -105,7 +106,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                 ref.invalidate(cartItemsProvider);
                               }
                             },
-                            child: const Text('Clear', style: TextStyle(color: Colors.red)),
+                            child: const Text(
+                              'Clear',
+                              style: TextStyle(color: Colors.red),
+                            ),
                           ),
                         ],
                       ),
@@ -114,7 +118,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   child: Text(
                     'Clear All',
                     style: TextStyle(
-                      color: isDark ? AppColors.darkError : AppColors.lightError,
+                      color: isDark
+                          ? AppColors.darkError
+                          : AppColors.lightError,
                       fontSize: 14,
                     ),
                   ),
@@ -137,20 +143,26 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                   Icon(
                     Icons.shopping_cart_outlined,
                     size: 80,
-                    color: isDark ? AppColors.neutral_500 : AppColors.neutral_400,
+                    color: isDark
+                        ? AppColors.neutral_500
+                        : AppColors.neutral_400,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Your cart is empty',
                     style: AppTypography.headline3(
-                      color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
+                      color: isDark
+                          ? AppColors.darkOnBackground
+                          : AppColors.lightOnBackground,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Add some items to get started',
                     style: AppTypography.bodyMedium(
-                      color: isDark ? AppColors.neutral_400 : AppColors.neutral_600,
+                      color: isDark
+                          ? AppColors.neutral_400
+                          : AppColors.neutral_600,
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -192,12 +204,18 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: isDark ? AppColors.neutral_500 : AppColors.neutral_400),
+              Icon(
+                Icons.error_outline,
+                size: 64,
+                color: isDark ? AppColors.neutral_500 : AppColors.neutral_400,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Failed to load cart',
                 style: AppTypography.headline3(
-                  color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
+                  color: isDark
+                      ? AppColors.darkOnBackground
+                      : AppColors.lightOnBackground,
                 ),
               ),
               const SizedBox(height: 8),
@@ -220,7 +238,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     );
   }
 
-  Widget _buildCartItem(CartItemModel item, bool isDark, CartController controller) {
+  Widget _buildCartItem(
+    CartItemModel item,
+    bool isDark,
+    CartController controller,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -247,8 +269,15 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 return Container(
                   width: 100,
                   height: 100,
-                  color: isDark ? AppColors.darkSurfaceContainer : AppColors.lightSurfaceContainer,
-                  child: Icon(Icons.image, color: isDark ? AppColors.neutral_500 : AppColors.neutral_400),
+                  color: isDark
+                      ? AppColors.darkSurfaceContainer
+                      : AppColors.lightSurfaceContainer,
+                  child: Icon(
+                    Icons.image,
+                    color: isDark
+                        ? AppColors.neutral_500
+                        : AppColors.neutral_400,
+                  ),
                 );
               },
             ),
@@ -264,14 +293,18 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.labelLarge(
-                      color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
+                      color: isDark
+                          ? AppColors.darkOnBackground
+                          : AppColors.lightOnBackground,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     '\$${item.discountedPrice.toStringAsFixed(2)}',
                     style: AppTypography.labelLarge(
-                      color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                      color: isDark
+                          ? AppColors.darkPrimary
+                          : AppColors.lightPrimary,
                       weight: FontWeight.bold,
                     ),
                   ),
@@ -281,14 +314,19 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       GestureDetector(
                         onTap: () {
                           if (item.quantity > 1) {
-                            controller.updateQuantity(item.productId, item.quantity - 1);
+                            controller.updateQuantity(
+                              item.productId,
+                              item.quantity - 1,
+                            );
                           }
                         },
                         child: Container(
                           width: 30,
                           height: 30,
                           decoration: BoxDecoration(
-                            color: isDark ? AppColors.darkSurfaceContainer : AppColors.lightSurfaceContainer,
+                            color: isDark
+                                ? AppColors.darkSurfaceContainer
+                                : AppColors.lightSurfaceContainer,
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(Icons.remove, size: 16),
@@ -298,22 +336,33 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                       Text(
                         '${item.quantity}',
                         style: AppTypography.headline4(
-                          color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
+                          color: isDark
+                              ? AppColors.darkOnBackground
+                              : AppColors.lightOnBackground,
                         ),
                       ),
                       const SizedBox(width: 12),
                       GestureDetector(
                         onTap: () {
-                          controller.updateQuantity(item.productId, item.quantity + 1);
+                          controller.updateQuantity(
+                            item.productId,
+                            item.quantity + 1,
+                          );
                         },
                         child: Container(
                           width: 30,
                           height: 30,
                           decoration: BoxDecoration(
-                            color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                            color: isDark
+                                ? AppColors.darkPrimary
+                                : AppColors.lightPrimary,
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.add, size: 16, color: Colors.white),
+                          child: const Icon(
+                            Icons.add,
+                            size: 16,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ],
@@ -367,7 +416,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               Text(
                 '$totalItems',
                 style: AppTypography.headline4(
-                  color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
+                  color: isDark
+                      ? AppColors.darkOnBackground
+                      : AppColors.lightOnBackground,
                   weight: FontWeight.bold,
                 ),
               ),
@@ -386,7 +437,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               Text(
                 '\$${total.toStringAsFixed(2)}',
                 style: AppTypography.headline4(
-                  color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
+                  color: isDark
+                      ? AppColors.darkOnBackground
+                      : AppColors.lightOnBackground,
                   weight: FontWeight.bold,
                 ),
               ),
@@ -435,13 +488,17 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               Text(
                 'Total Price:',
                 style: AppTypography.headline4(
-                  color: isDark ? AppColors.darkOnBackground : AppColors.lightOnBackground,
+                  color: isDark
+                      ? AppColors.darkOnBackground
+                      : AppColors.lightOnBackground,
                 ),
               ),
               Text(
                 '\$${(total + (total > 50 ? 0 : 5) + (total * 0.18)).toStringAsFixed(2)}',
                 style: AppTypography.headline3(
-                  color: isDark ? AppColors.darkPrimary : AppColors.lightPrimary,
+                  color: isDark
+                      ? AppColors.darkPrimary
+                      : AppColors.lightPrimary,
                   weight: FontWeight.bold,
                 ),
               ),
@@ -451,7 +508,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           // ✅ تم إصلاح الخطأ هنا
           PremiumButton(
             label: 'Proceed to Checkout',
-            onPressed: total > 0 ? () => context.push('/shipping-address') : () {},
+            onPressed: total > 0
+                ? () => context.push('/shipping-address')
+                : () {},
           ),
         ],
       ),
