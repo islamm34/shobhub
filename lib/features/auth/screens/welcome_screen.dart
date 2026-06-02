@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_typography.dart';
@@ -67,15 +68,13 @@ class WelcomeScreen extends StatelessWidget {
                 children: [
                   PremiumButton(
                     label: 'Login to Account',
-                    onPressed: () =>
-                        Navigator.of(context).pushNamed('/login'),
+                    onPressed: () => context.push('/login'), // ✅ استخدام GoRouter
                   ),
                   const SizedBox(height: 12),
                   PremiumButton(
                     label: 'Create New Account',
                     variant: ButtonVariant.outline,
-                    onPressed: () =>
-                        Navigator.of(context).pushNamed('/register'),
+                    onPressed: () => context.push('/register'), // ✅ استخدام GoRouter
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -93,7 +92,7 @@ class WelcomeScreen extends StatelessWidget {
                           'Or continue with',
                           style: AppTypography.bodySmall(
                             color:
-                                isDark ? AppColors.neutral_500 : AppColors.neutral_500,
+                            isDark ? AppColors.neutral_500 : AppColors.neutral_500,
                           ),
                         ),
                       ),
@@ -159,4 +158,3 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 }
-

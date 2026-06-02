@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/services/firestore_service.dart';
 import '../models/product_model.dart';
+import 'auth_provider.dart';
 
 final firestoreServiceProvider = Provider((ref) => FirestoreService());
 
@@ -52,15 +53,21 @@ class CartItemModel {
   }
 }
 
-// ✅ Provider لقائمة الـ Cart
+// ✅ Stream لقائمة السلة من Firestore
 final cartItemsProvider = StreamProvider<List<CartItemModel>>((ref) {
   final firestoreService = ref.watch(firestoreServiceProvider);
+  final currentUser = ref.watch(currentUserProvider);
+
+  if (currentUser == null) {
+    return Stream.value([]);
+  }
+
   return firestoreService.getCartStream().map((cartList) {
     return cartList.map((item) => CartItemModel.fromMap(item)).toList();
   });
 });
 
-// ✅ Provider للتحكم في الـ Cart
+// ✅ Provider للتحكم في السلة
 final cartControllerProvider = Provider((ref) {
   return CartController(ref);
 });
@@ -71,6 +78,11 @@ class CartController {
   CartController(this.ref);
 
   Future<void> addToCart(ProductModel product, {int quantity = 1}) async {
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser == null) {
+      throw Exception('Please login to add to cart');
+    }
+
     final firestoreService = ref.read(firestoreServiceProvider);
     await firestoreService.addToCart(
       productId: product.id ?? 0,
@@ -81,31 +93,32 @@ class CartController {
       quantity: quantity,
     );
 
-    // تحديث الـ Provider
     ref.invalidate(cartItemsProvider);
   }
 
   Future<void> updateQuantity(int productId, int quantity) async {
     final firestoreService = ref.read(firestoreServiceProvider);
     await firestoreService.updateCartQuantity(productId, quantity);
-
-    // تحديث الـ Provider
     ref.invalidate(cartItemsProvider);
   }
 
   Future<void> removeFromCart(int productId) async {
     final firestoreService = ref.read(firestoreServiceProvider);
     await firestoreService.removeFromCart(productId);
-
-    // تحديث الـ Provider
     ref.invalidate(cartItemsProvider);
   }
 
   Future<void> clearCart() async {
     final firestoreService = ref.read(firestoreServiceProvider);
     await firestoreService.clearCart();
-
-    // تحديث الـ Provider
     ref.invalidate(cartItemsProvider);
+  }
+
+  double calculateTotal(List<CartItemModel> cartItems) {
+    return cartItems.fold(0, (sum, item) => sum + item.totalPrice);
+  }
+
+  int calculateTotalItems(List<CartItemModel> cartItems) {
+    return cartItems.fold(0, (sum, item) => sum + item.quantity);
   }
 }

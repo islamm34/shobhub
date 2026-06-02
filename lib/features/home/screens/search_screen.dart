@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/services/api_service.dart';
@@ -641,9 +642,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildProductCard(ProductModel product, bool isDark) {
     return GestureDetector(
-      onTap: () => Navigator.of(
-        context,
-      ).pushNamed('/product-detail', arguments: {'productId': product.id ?? 0}),
+      onTap: () => context.push('/product-detail', extra: product.id ?? 0),
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,

@@ -272,7 +272,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               : _buildLoginRequiredView(isDark, 'Your Wishlist'),
 
           // Cart Tab
-          const EmptyCartScreen(),
+          const CartScreen(),
 
           // Profile Tab
           _buildProfileView(dummyUser, isDark),
@@ -945,7 +945,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   Widget _buildCartView(bool isDark) {
-    return const EmptyCartScreen();
+    return const CartScreen();
   }
 
   Widget _buildGlassBottomNavigationBar(bool isDark) {

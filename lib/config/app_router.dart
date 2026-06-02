@@ -1,5 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
@@ -115,7 +113,6 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/category-products',
       builder: (context, state) {
-        // ✅ استلام بيانات التصنيف بشكل صحيح
         final extra = state.extra as Map<String, dynamic>?;
         final category = extra?['category'] as String?;
         return SearchScreen(initialCategory: category);
@@ -127,7 +124,7 @@ final GoRouter appRouter = GoRouter(
     ),
     GoRoute(
       path: '/empty-cart',
-      builder: (context, state) => const EmptyCartScreen(),
+      builder: (context, state) => const CartScreen(),
     ),
     GoRoute(
       path: '/sale-products',
